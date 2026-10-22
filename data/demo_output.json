@@ -1,0 +1,206 @@
+{
+  "threshold": [
+    {
+      "detector": "threshold",
+      "decision": "suspicious",
+      "timestamp": "2026-10-18T09:14:10.078299+00:00",
+      "triggered_condition": [
+        {
+          "feature": "packet_rate",
+          "value": 300.15,
+          "threshold": 80.0
+        },
+        {
+          "feature": "byte_rate",
+          "value": 270135.0,
+          "threshold": 60000.0
+        },
+        {
+          "feature": "flow_rate",
+          "value": 200.1,
+          "threshold": 25.0
+        },
+        {
+          "feature": "syn_ratio",
+          "value": 0.7,
+          "threshold": 0.25
+        },
+        {
+          "feature": "udp_ratio",
+          "value": 0.2,
+          "threshold": 0.15
+        }
+      ],
+      "measured_values": {
+        "packet_rate": 300.15,
+        "byte_rate": 270135.0,
+        "flow_rate": 200.1,
+        "syn_ratio": 0.7,
+        "udp_ratio": 0.2
+      }
+    },
+    {
+      "detector": "threshold",
+      "decision": "normal",
+      "timestamp": "2026-10-18T09:14:10.078310+00:00",
+      "triggered_condition": [],
+      "measured_values": {
+        "packet_rate": 27.0,
+        "byte_rate": 24300.0,
+        "flow_rate": 13.5,
+        "syn_ratio": 0.03,
+        "udp_ratio": 0.05
+      }
+    },
+    {
+      "detector": "threshold",
+      "decision": "normal",
+      "timestamp": "2026-10-18T09:14:10.078313+00:00",
+      "triggered_condition": [],
+      "measured_values": {
+        "packet_rate": 37.0,
+        "byte_rate": 33300.0,
+        "flow_rate": 18.5,
+        "syn_ratio": 0.03,
+        "udp_ratio": 0.07
+      }
+    },
+    {
+      "detector": "threshold",
+      "decision": "normal",
+      "timestamp": "2026-10-18T09:14:10.078316+00:00",
+      "triggered_condition": [],
+      "measured_values": {
+        "packet_rate": 33.0,
+        "byte_rate": 29700.0,
+        "flow_rate": 16.5,
+        "syn_ratio": 0.04,
+        "udp_ratio": 0.04
+      }
+    },
+    {
+      "detector": "threshold",
+      "decision": "suspicious",
+      "timestamp": "2026-10-18T09:14:10.078318+00:00",
+      "triggered_condition": [
+        {
+          "feature": "packet_rate",
+          "value": 304.0,
+          "threshold": 80.0
+        },
+        {
+          "feature": "byte_rate",
+          "value": 273600.0,
+          "threshold": 60000.0
+        },
+        {
+          "feature": "flow_rate",
+          "value": 202.67,
+          "threshold": 25.0
+        },
+        {
+          "feature": "syn_ratio",
+          "value": 0.46,
+          "threshold": 0.25
+        }
+      ],
+      "measured_values": {
+        "packet_rate": 304.0,
+        "byte_rate": 273600.0,
+        "flow_rate": 202.67,
+        "syn_ratio": 0.46,
+        "udp_ratio": 0.08
+      }
+    }
+  ],
+  "entropy": [
+    {
+      "detector": "entropy",
+      "decision": "normal",
+      "timestamp": "2026-10-18T09:14:10.078341+00:00",
+      "triggered_condition": {
+        "baseline_entropy": 2.5,
+        "current_entropy": 1.4353713907745331,
+        "delta": 1.0646286092254669,
+        "threshold": 1.875
+      },
+      "measured_values": {
+        "entropy_value": 1.4353713907745331,
+        "baseline_entropy": 2.5,
+        "distribution_field": "source_ip_distribution"
+      }
+    },
+    {
+      "detector": "entropy",
+      "decision": "suspicious",
+      "timestamp": "2026-10-18T09:14:10.078349+00:00",
+      "triggered_condition": {
+        "baseline_entropy": 2.5,
+        "current_entropy": 0.0,
+        "delta": 2.5,
+        "threshold": 1.875
+      },
+      "measured_values": {
+        "entropy_value": 0.0,
+        "baseline_entropy": 2.5,
+        "distribution_field": "source_ip_distribution"
+      }
+    },
+    {
+      "detector": "entropy",
+      "decision": "suspicious",
+      "timestamp": "2026-10-18T09:14:10.078354+00:00",
+      "triggered_condition": {
+        "baseline_entropy": 2.5,
+        "current_entropy": 0.0,
+        "delta": 2.5,
+        "threshold": 1.875
+      },
+      "measured_values": {
+        "entropy_value": 0.0,
+        "baseline_entropy": 2.5,
+        "distribution_field": "source_ip_distribution"
+      }
+    },
+    {
+      "detector": "entropy",
+      "decision": "suspicious",
+      "timestamp": "2026-10-18T09:14:10.078358+00:00",
+      "triggered_condition": {
+        "baseline_entropy": 2.5,
+        "current_entropy": 0.0,
+        "delta": 2.5,
+        "threshold": 1.875
+      },
+      "measured_values": {
+        "entropy_value": 0.0,
+        "baseline_entropy": 2.5,
+        "distribution_field": "source_ip_distribution"
+      }
+    },
+    {
+      "detector": "entropy",
+      "decision": "normal",
+      "timestamp": "2026-10-18T09:14:10.078363+00:00",
+      "triggered_condition": {
+        "baseline_entropy": 2.5,
+        "current_entropy": 1.4353713907745331,
+        "delta": 1.0646286092254669,
+        "threshold": 1.875
+      },
+      "measured_values": {
+        "entropy_value": 1.4353713907745331,
+        "baseline_entropy": 2.5,
+        "distribution_field": "source_ip_distribution"
+      }
+    }
+  ],
+  "random_forest": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "false_positive_rate": 0.0,
+    "n_test_samples": 80
+  }
+}

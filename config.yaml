@@ -1,0 +1,57 @@
+project:
+  name: "Intelligent DDoS Detection and Mitigation in SDN"
+  lab_network: "10.0.0.0/24"
+
+controller:
+  ip: "127.0.0.1"
+  port: 6633
+  stats_interval_seconds: 1.0
+  switch_name: "s1"
+
+lab:
+  server_ip: "10.0.0.3"
+  attacker_ip: "10.0.0.2"
+  client_ip: "10.0.0.1"
+  attacker_ports: [80, 443, 8080]
+  normal_rate_per_second: 20
+  attack_levels:
+    low:
+      packet_rate: 200
+      syn_ratio: 0.45
+      udp_ratio: 0.30
+    medium:
+      packet_rate: 500
+      syn_ratio: 0.65
+      udp_ratio: 0.50
+    high:
+      packet_rate: 1200
+      syn_ratio: 0.85
+      udp_ratio: 0.75
+
+detection:
+  selected: "threshold"
+  threshold:
+    packet_rate: 85.0
+    byte_rate: 70000.0
+    syn_ratio: 0.25
+    udp_ratio: 0.18
+    flow_rate: 30.0
+    minimum_packet_rate_for_ratio: 20.0
+  entropy:
+    baseline_entropy: 3.0
+    sensitivity: 0.75
+  random_forest:
+    random_state: 42
+    n_estimators: 200
+
+mitigation:
+  rule_ttl_seconds: 30
+  rate_limit_pps: 25
+  block_prefix_length: 24
+  action: "rate_limit"
+  max_rules: 25
+
+testbed:
+  synthetic_data_points: 500
+  attack_fraction: 0.35
+  output_dir: "data"

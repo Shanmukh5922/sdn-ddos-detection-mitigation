@@ -60,9 +60,9 @@ def traffic_features(sample: Mapping[str, Any]) -> dict[str, float]:
     flow_count = safe_float(sample.get("flow_count"))
     flow_rate = safe_float(sample.get("flow_rate"), flow_count)
     syn_count = safe_float(sample.get("syn_count"))
-    udp_count = safe_float(sample.get("udp_count"))
-    total_packets = max(1.0, packet_rate)
     protocol_counts = sample.get("protocol_distribution") or {}
+    udp_count = safe_float(sample.get("udp_count"), safe_float(protocol_counts.get("UDP")))
+    total_packets = max(1.0, packet_rate)
     src_ip_counts = sample.get("source_ip_distribution") or {}
 
     proto_distribution = normalize_distribution(protocol_counts)

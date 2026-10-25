@@ -79,8 +79,15 @@ loads, not a high-volume stress test.
 At the Mininet prompt, send a bounded UDP sample:
 
 ```text
+h3 python3 /mnt/c/Users/Shanmukha/Desktop/cn_project/scripts/lab_udp_sink.py --duration 15 --port 8080 >/tmp/lab-udp-sink.log 2>&1 &
 h2 python3 /mnt/c/Users/Shanmukha/Desktop/cn_project/scripts/lab_traffic.py --type udp --duration 10 --pps 100 --port 8080
+h3 sleep 6
+h3 cat /tmp/lab-udp-sink.log
 ```
+
+The UDP sink confirms how many tagged datagrams h3 actually received from h2.
+The generator's sent count alone only confirms that h2's local socket accepted
+the send; a mitigation rule may prevent some later datagrams from reaching h3.
 
 For bounded TCP connection attempts that emit SYN packets, first start the
 protected server on `h3`, then run:
@@ -102,7 +109,7 @@ or modeled output as live experiment measurements.
 - The entropy detector is explicitly conservative: its logic compares the current traffic entropy to a configured baseline and documents entropy as a directional feature with known caveats.
 - The Random Forest model is trained on labelled synthetic traffic and should be replaced with real captured Mininet flow features in a controlled lab evaluation.
 - The controller app accepts OS-Ken or Ryu imports. OS-Ken and Ryu system packages should be run with their system manager executable, not from the project virtual environment.
-- The controller polls OpenFlow port and flow counters every configured interval. Packet and byte rates are computed from ingress-port counter deltas (excluding the OpenFlow local port). Flow creation rate is computed from complete multipart flow-stat snapshots over the elapsed time between snapshots; it counts new switch flow entries, not unique TCP connections. Source/protocol distributions use per-flow packet-counter deltas, including packets already present when a flow is first observed. TCP SYNs are counted when observed as controller Packet-In events; this is flow-start instrumentation, not a full packet capture.
+- The controller polls OpenFlow port and flow counters every configured interval. Packet and byte rates are computed from ingress-port counter deltas (excluding the OpenFlow local port). Flow creation rate is computed from complete multipart flow-stat snapshots over the elapsed time between snapshots; it counts new switch flow entries, not unique TCP connections. Protocol distributions and UDP ratio use per-flow packet-counter deltas, including packets already present when a flow is first observed; `udp_count` is the cumulative packet count reported by UDP-matching switch flow entries, so it remains nonzero in idle samples while those flow entries remain installed. TCP SYNs are counted when observed as controller Packet-In events; this is flow-start instrumentation, not a full packet capture.
 - Select a detector with `detection.selected` in `config.yaml`: `threshold`, `entropy`, or `random_forest`. The default is `threshold`.
 - Threshold-based SYN/UDP ratio checks are only considered when packet rate reaches `detection.threshold.minimum_packet_rate_for_ratio` (20 packets/second by default), preventing a small sample that is entirely one protocol from triggering a block by itself.
 - Current mitigation is a temporary, source-IP-specific drop rule with a timeout. It is only applied to suspicious sources inside the configured lab CIDR and excludes the configured client and protected server.

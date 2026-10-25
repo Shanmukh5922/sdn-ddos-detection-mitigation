@@ -6,7 +6,12 @@ from sdn_ddos.detectors.entropy import EntropyDetector
 from sdn_ddos.detectors.random_forest import RandomForestDetector
 from sdn_ddos.detectors.threshold import ThresholdDetector
 from sdn_ddos.features import counter_rate, traffic_features
-from sdn_ddos.flow_stats import FlowRateTracker, FlowStatsAssembler, transport_protocol
+from sdn_ddos.flow_stats import (
+    FlowRateTracker,
+    FlowStatsAssembler,
+    cumulative_protocol_packet_counts,
+    transport_protocol,
+)
 from sdn_ddos.mitigation import MitigationManager
 from sdn_ddos.traffic import build_synthetic_dataset, validate_lab_traffic
 
@@ -71,6 +76,16 @@ def test_feature_extraction_and_dataset_shape():
     assert traffic_features({"packet_rate": 100, "syn_ratio": 0.4})["syn_ratio"] == 0.4
 
 
+def test_feature_extraction_uses_udp_protocol_counter_when_udp_count_is_absent():
+    features = traffic_features({
+        "packet_rate": 100,
+        "protocol_distribution": {"UDP": 99},
+    })
+
+    assert features["udp_count"] == 99.0
+    assert features["udp_ratio"] == 0.99
+
+
 def test_counter_rate_uses_counter_delta():
     assert counter_rate(150, 100, 5) == 10.0
     assert counter_rate(10, 15, 2) == 0.0
@@ -100,6 +115,22 @@ def test_transport_protocol_uses_ip_protocol_or_transport_ports():
     assert transport_protocol({"ip_proto": "6"}) == "TCP"
     assert transport_protocol({"tcp_dst": 8080}) == "TCP"
     assert transport_protocol({"ipv4_src": "10.0.0.2"}) is None
+
+
+def test_cumulative_protocol_counts_keep_udp_total_when_interval_is_idle():
+    class FlowEntry:
+        def __init__(self, match, packet_count):
+            self.match = match
+            self.packet_count = packet_count
+
+    counts = cumulative_protocol_packet_counts([
+        FlowEntry({"eth_type": 0x0800, "ip_proto": 17, "udp_dst": 8080}, 96),
+        FlowEntry({"eth_type": 0x0800, "ip_proto": 6, "tcp_dst": 80}, 4),
+        FlowEntry({"eth_type": 0x0800, "ipv4_src": "10.0.0.2"}, 100),
+    ])
+
+    assert counts["UDP"] == 96
+    assert counts["TCP"] == 4
 
 
 def test_random_forest_pipeline_trains_and_predicts():

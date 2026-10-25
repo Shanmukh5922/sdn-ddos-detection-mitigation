@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Hashable, Iterable, Mapping
 from typing import Any
 
@@ -17,6 +18,16 @@ def transport_protocol(match: Mapping[str, Any]) -> str | None:
     if protocol_number == 17 or match.get("udp_src") is not None or match.get("udp_dst") is not None:
         return "UDP"
     return None
+
+
+def cumulative_protocol_packet_counts(flow_entries: Iterable[Any]) -> Counter[str]:
+    """Sum switch-maintained packet counters for each recognized transport protocol."""
+    counts: Counter[str] = Counter()
+    for entry in flow_entries:
+        protocol = transport_protocol(entry.match)
+        if protocol is not None:
+            counts[protocol] += max(0, int(entry.packet_count))
+    return counts
 
 
 class FlowStatsAssembler:

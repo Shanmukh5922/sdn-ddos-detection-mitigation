@@ -26,7 +26,12 @@ from .config import load_config
 from .detectors.entropy import EntropyDetector
 from .detectors.threshold import ThresholdDetector
 from .features import counter_rate, traffic_features
-from .flow_stats import FlowRateTracker, FlowStatsAssembler, transport_protocol
+from .flow_stats import (
+    FlowRateTracker,
+    FlowStatsAssembler,
+    cumulative_protocol_packet_counts,
+    transport_protocol,
+)
 
 
 class DDoSDetectorApp(ControllerApp):
@@ -97,6 +102,18 @@ class DDoSDetectorApp(ControllerApp):
         self.logger.info("Switch %s connected", datapath.id)
         parser = datapath.ofproto_parser
         ofproto = datapath.ofproto
+        datapath.send_msg(parser.OFPFlowMod(
+            datapath=datapath,
+            cookie=0,
+            cookie_mask=0,
+            table_id=ofproto.OFPTT_ALL,
+            command=ofproto.OFPFC_DELETE,
+            out_port=ofproto.OFPP_ANY,
+            out_group=ofproto.OFPG_ANY,
+            match=parser.OFPMatch(),
+            instructions=[],
+        ))
+        self.logger.info("Cleared existing flow rules on switch %s", datapath.id)
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, ofproto.OFPCML_NO_BUFFER)]
         instruction = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
@@ -232,7 +249,6 @@ class DDoSDetectorApp(ControllerApp):
         protocol_total = sum(protocol_counts.values())
         sample["udp_ratio"] = protocol_counts.get("UDP", 0) / protocol_total if protocol_total else 0.0
         self.flow_snapshot[datapath.id] = sample
-        self._analyze_sample(datapath, sample)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def flow_stats_reply_handler(self, ev: Any) -> None:
@@ -256,6 +272,7 @@ class DDoSDetectorApp(ControllerApp):
         source_ip_counts: Counter[str] = Counter()
         protocol_counts: Counter[str] = Counter()
         current_packet_counts = {}
+        cumulative_protocol_counts = cumulative_protocol_packet_counts(flow_entries)
         now = time.monotonic()
         current_keys = set()
         for stat in flow_entries:
@@ -290,19 +307,24 @@ class DDoSDetectorApp(ControllerApp):
         self._source_totals[datapath.id] = source_ip_counts
         flow_rate = self._flow_rate_tracker.update(datapath.id, current_keys, now)
         protocol_total = sum(protocol_counts.values())
+        port_sample = self.flow_snapshot.get(datapath.id, {})
+        syn_count = float(port_sample.get("syn_count", 0.0))
+        packet_rate = float(port_sample.get("packet_rate", 0.0))
         sample = {
-            "packet_rate": self.flow_snapshot.get(datapath.id, {}).get("packet_rate", 0.0),
-            "byte_rate": self.flow_snapshot.get(datapath.id, {}).get("byte_rate", 0.0),
+            "packet_rate": packet_rate,
+            "byte_rate": float(port_sample.get("byte_rate", 0.0)),
             "flow_count": len(flow_stats),
             "flow_rate": flow_rate,
             "source_ip_distribution": dict(source_ip_counts),
             "protocol_distribution": dict(protocol_counts),
-            "syn_count": 0.0,
-            "syn_ratio": 0.0,
+            "udp_count": float(cumulative_protocol_counts["UDP"]),
+            "syn_count": syn_count,
+            "syn_ratio": min(syn_count / packet_rate, 1.0) if packet_rate > 0 else 0.0,
             "udp_ratio": protocol_counts["UDP"] / protocol_total if protocol_total else 0.0,
         }
         self.flow_snapshot[datapath.id] = sample
         self.logger.info("Flow stats for switch %s: %s", datapath.id, sample)
+        self._analyze_sample(datapath, sample)
 
     def _analyze_sample(self, datapath: Any, sample: dict[str, Any]) -> None:
         features = traffic_features(sample)
